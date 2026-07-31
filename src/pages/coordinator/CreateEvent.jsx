@@ -8,100 +8,8 @@ import { useNavigate } from 'react-router-dom'
 export default function CreateEvent() {
   const { userProfile } = useAuth()
   const navigate = useNavigate()
-// Update initial form state — add posterURL and posterType, remove old fields:
-const [form, setForm] = useState({
-  title: '', description: '', category: '',
-  clubName: '', venue: '',
-  regStartDate: '', regStartTime: '',
-  regEndDate: '', regEndTime: '',
-  eventDate: '', eventTime: '',
-  maxSeats: '', unlimitedSeats: false,
-  registrationLink: '',
-  posterURL: '',
-  posterType: 'image',
-  visibility: 'DepartmentOnly'
-})
-  const [loading, setLoading] = useState(false)
-  const [msg, setMsg] = useState({ type: '', text: '' })
 
-  const categories = [
-    'Technical', 'Workshop', 'Seminar', 'Sports',
-    'Cultural', 'Placement', 'NSS', 'NCC', 'YRC'
-  ]
-
-  const convertGoogleDriveLink = (url) => {
-  if (!url) return ''
-
-  // Already converted
-  if (url.includes('uc?id=')) return url
-
-  // Convert Google Drive sharing link
-  const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/)
-
-  if (match) {
-    return `https://drive.google.com/uc?id=${match[1]}`
-  }
-
-  return url
-}
-
-  const handleFileChange = (e) => {
-    const file = e.target.files[0]
-    if (!file) return
-    setPosterFile(file)
-    if (file.type.startsWith('image/')) setPosterPreview(URL.createObjectURL(file))
-    else setPosterPreview('pdf')
-  }
-
-const handleSubmit = async (e) => {
-  e.preventDefault()
-  setLoading(true)
-  try {
-    await addDoc(collection(db, 'events'), {
-      title: form.title,
-      description: form.description,
-      department: userProfile.department,
-      category: form.category,
-      clubName: form.clubName,
-      venue: form.venue,
-      regStartDate: form.regStartDate,
-      regStartTime: form.regStartTime,
-      regEndDate: form.regEndDate,
-      regEndTime: form.regEndTime,
-      eventDate: form.eventDate,
-      eventTime: form.eventTime,
-      maxSeats: form.unlimitedSeats ? 'Unlimited' : parseInt(form.maxSeats),
-      unlimitedSeats: form.unlimitedSeats,
-      registrationLink: form.registrationLink,
-      posterURL: form.posterURL,
-      posterType: form.posterType,
-      visibility: form.visibility,
-      createdBy: userProfile.email,
-      createdAt: new Date().toISOString()
-    })
-    setMsg({ type: 'success', text: 'Event published successfully!' })
-    setTimeout(() => navigate('/coordinator/manage-events'), 1500)
-  } catch (err) {
-    console.error(err)
-    setMsg({ type: 'error', text: 'Failed to publish. Try again.' })
-  }
-  setLoading(false)
-}
-  const inputStyle = {
-    width: '100%', padding: '11px 14px', borderRadius: 10,
-    border: '1.5px solid #e5e7eb', outline: 'none',
-    fontSize: '0.9rem', color: '#111827',
-    background: 'white', transition: 'border-color 0.2s'
-  }
-  const labelStyle = {
-    fontWeight: 600, fontSize: '0.82rem',
-    color: '#374151', display: 'block', marginBottom: 6
-  }
-  const focus = e => e.target.style.borderColor = '#f59e0b'
-  const blur = e => e.target.style.borderColor = '#e5e7eb'
-
-const clearForm = () => {
-  setForm({
+  const [form, setForm] = useState({
     title: '', description: '', category: '',
     clubName: '', venue: '',
     regStartDate: '', regStartTime: '',
@@ -111,10 +19,95 @@ const clearForm = () => {
     registrationLink: '',
     posterURL: '',
     posterType: 'image',
+    registrationType: 'builtin',
     visibility: 'DepartmentOnly'
   })
-  setMsg({ type: '', text: '' })
-}
+
+  const [loading, setLoading] = useState(false)
+  const [msg, setMsg] = useState({ type: '', text: '' })
+
+  const categories = [
+    'Technical', 'Workshop', 'Seminar', 'Sports',
+    'Cultural', 'Placement', 'NSS', 'NCC', 'YRC'
+  ]
+
+  const convertGoogleDriveLink = (url) => {
+    if (!url) return ''
+    if (url.includes('uc?id=')) return url
+    const match = url.match(/\/d\/([a-zA-Z0-9_-]+)/)
+    if (match) return `https://drive.google.com/uc?id=${match[1]}`
+    return url
+  }
+
+  const handleSubmit = async (e) => {
+    e.preventDefault()
+    setLoading(true)
+    try {
+      await addDoc(collection(db, 'events'), {
+        title: form.title,
+        description: form.description,
+        department: userProfile.department,
+        category: form.category,
+        clubName: form.clubName,
+        venue: form.venue,
+        regStartDate: form.regStartDate,
+        regStartTime: form.regStartTime,
+        regEndDate: form.regEndDate,
+        regEndTime: form.regEndTime,
+        eventDate: form.eventDate,
+        eventTime: form.eventTime,
+        maxSeats: form.unlimitedSeats ? 'Unlimited' : parseInt(form.maxSeats),
+        unlimitedSeats: form.unlimitedSeats,
+        registrationType: form.registrationType,
+        registrationLink: form.registrationType === 'external'
+          ? form.registrationLink : '',
+        posterURL: form.posterURL || '',
+        posterType: form.posterType || 'image',
+        visibility: form.visibility,
+        createdBy: userProfile.email,
+        createdAt: new Date().toISOString()
+      })
+      setMsg({ type: 'success', text: 'Event published successfully!' })
+      setTimeout(() => navigate('/coordinator/manage-events'), 1500)
+    } catch (err) {
+      console.error(err)
+      setMsg({ type: 'error', text: 'Failed to publish. Try again.' })
+    }
+    setLoading(false)
+  }
+
+  const inputStyle = {
+    width: '100%', padding: '11px 14px', borderRadius: 10,
+    border: '1.5px solid #e5e7eb', outline: 'none',
+    fontSize: '0.9rem', color: '#111827',
+    background: 'white', transition: 'border-color 0.2s'
+  }
+
+  const labelStyle = {
+    fontWeight: 600, fontSize: '0.82rem',
+    color: '#374151', display: 'block', marginBottom: 6
+  }
+
+  const focus = e => e.target.style.borderColor = '#f59e0b'
+  const blur = e => e.target.style.borderColor = '#e5e7eb'
+
+  const clearForm = () => {
+    setForm({
+      title: '', description: '', category: '',
+      clubName: '', venue: '',
+      regStartDate: '', regStartTime: '',
+      regEndDate: '', regEndTime: '',
+      eventDate: '', eventTime: '',
+      maxSeats: '', unlimitedSeats: false,
+      registrationLink: '',
+      posterURL: '',
+      posterType: 'image',
+      registrationType: 'builtin',
+      visibility: 'DepartmentOnly'
+    })
+    setMsg({ type: '', text: '' })
+  }
+
   return (
     <CoordinatorLayout>
       <div style={{
@@ -150,97 +143,96 @@ const clearForm = () => {
         <form onSubmit={handleSubmit}>
           <div className="row g-3">
 
-{/* Poster / Circular */}
-<div className="col-12">
-  <label style={labelStyle}>
-    Event Poster / Circular
-    <span style={{ color: '#9ca3af', fontWeight: 400, marginLeft: 8 }}>
-      (Image URL or PDF Link)
-    </span>
-  </label>
+            {/* Poster / Circular */}
+            <div className="col-12">
+              <label style={labelStyle}>
+                Event Poster / Circular
+                <span style={{ color: '#9ca3af', fontWeight: 400, marginLeft: 8 }}>
+                  (Image URL or PDF Link)
+                </span>
+              </label>
 
-  {/* Type Toggle */}
-  <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
-    {['image', 'pdf'].map(type => (
-      <button key={type} type="button"
-        onClick={() => setForm({ ...form, posterType: type, posterURL: '' })}
-        style={{
-          padding: '7px 18px', borderRadius: 8, cursor: 'pointer',
-          fontWeight: 600, fontSize: '0.82rem', transition: 'all 0.2s',
-          border: form.posterType === type ? '1.5px solid #f59e0b' : '1.5px solid #e5e7eb',
-          background: form.posterType === type ? 'rgba(245,158,11,0.08)' : 'white',
-          color: form.posterType === type ? '#f59e0b' : '#6b7280'
-        }}>
-        {type === 'image' ? '🖼 Image URL' : '📄 PDF Link'}
-      </button>
-    ))}
-  </div>
+              {/* Type Toggle */}
+              <div style={{ display: 'flex', gap: 10, marginBottom: 12 }}>
+                {['image', 'pdf'].map(type => (
+                  <button key={type} type="button"
+                    onClick={() => setForm({ ...form, posterType: type, posterURL: '' })}
+                    style={{
+                      padding: '7px 18px', borderRadius: 8, cursor: 'pointer',
+                      fontWeight: 600, fontSize: '0.82rem', transition: 'all 0.2s',
+                      border: form.posterType === type ? '1.5px solid #f59e0b' : '1.5px solid #e5e7eb',
+                      background: form.posterType === type ? 'rgba(245,158,11,0.08)' : 'white',
+                      color: form.posterType === type ? '#f59e0b' : '#6b7280'
+                    }}>
+                    {type === 'image' ? '🖼 Image URL' : '📄 PDF Link'}
+                  </button>
+                ))}
+              </div>
 
-  <div style={{ position: 'relative' }}>
-    <i className={`fas fa-${form.posterType === 'pdf' ? 'file-pdf' : 'image'}`} style={{
-      position: 'absolute', left: 14, top: '50%',
-      transform: 'translateY(-50%)', color: '#9ca3af'
-    }}></i>
-    <input
-      type="url"
-      placeholder={
-        form.posterType === 'pdf'
-          ? 'https://drive.google.com/file/d/... (PDF link)'
-          : 'Paste Google Drive image link'
-      }
-      value={form.posterURL}
-      onChange={(e) =>
-  setForm({
-    ...form,
-    posterURL:
-      form.posterType === 'image'
-        ? convertGoogleDriveLink(e.target.value)
-        : e.target.value
-  })
-}
-      style={{ ...inputStyle, paddingLeft: 40 }}
-      onFocus={focus} onBlur={blur}
-    />
-  </div>
+              <div style={{ position: 'relative' }}>
+                <i className={`fas fa-${form.posterType === 'pdf' ? 'file-pdf' : 'image'}`} style={{
+                  position: 'absolute', left: 14, top: '50%',
+                  transform: 'translateY(-50%)', color: '#9ca3af'
+                }}></i>
+                <input
+                  type="url"
+                  placeholder={
+                    form.posterType === 'pdf'
+                      ? 'https://drive.google.com/file/d/... (PDF link)'
+                      : 'Paste Google Drive image link'
+                  }
+                  value={form.posterURL}
+                  onChange={(e) => setForm({
+                    ...form,
+                    posterURL: form.posterType === 'image'
+                      ? convertGoogleDriveLink(e.target.value)
+                      : e.target.value
+                  })}
+                  style={{ ...inputStyle, paddingLeft: 40 }}
+                  onFocus={focus} onBlur={blur}
+                />
+              </div>
 
-  <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: 6 }}>
-    <i className="fas fa-info-circle me-1"></i>
-    {form.posterType === 'pdf'
-      ? 'Upload PDF to Google Drive → Share → Copy link → paste here.'
-      : 'Upload image to Google Drive → Share → Get link and paste here'}
-  </div>
+              <div style={{ fontSize: '0.75rem', color: '#9ca3af', marginTop: 6 }}>
+                <i className="fas fa-info-circle me-1"></i>
+                {form.posterType === 'pdf'
+                  ? 'Upload PDF to Google Drive → Share → Copy link → paste here.'
+                  : 'Upload image to Google Drive → Share → Get link and paste here'}
+              </div>
 
-  {/* Live Preview */}
-  {form.posterURL && form.posterType === 'image' && (
-    <div style={{ marginTop: 12 }}>
-      <img src={form.posterURL} alt="Poster preview"
-        onError={e => { e.target.style.display = 'none' }}
-        style={{
-          maxHeight: 220, maxWidth: '100%',
-          borderRadius: 10, objectFit: 'contain',
-          border: '1px solid #f3f4f6'
-        }} />
-    </div>
-  )}
+              {/* Live Preview */}
+              {form.posterURL && form.posterType === 'image' && (
+                <div style={{ marginTop: 12 }}>
+                  <img src={form.posterURL} alt="Poster preview"
+                    onError={e => { e.target.style.display = 'none' }}
+                    style={{
+                      maxHeight: 220, maxWidth: '100%',
+                      borderRadius: 10, objectFit: 'contain',
+                      border: '1px solid #f3f4f6'
+                    }} />
+                </div>
+              )}
 
-  {form.posterURL && form.posterType === 'pdf' && (
-    <div style={{
-      marginTop: 12, padding: '12px 16px', borderRadius: 10,
-      background: 'rgba(220,38,38,0.06)',
-      border: '1px solid rgba(220,38,38,0.15)',
-      display: 'flex', alignItems: 'center', gap: 10
-    }}>
-      <i className="fas fa-file-pdf" style={{ color: '#dc2626', fontSize: '1.2rem' }}></i>
-      <div>
-        <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#111827' }}>PDF Circular linked</div>
-        <a href={form.posterURL} target="_blank" rel="noreferrer"
-          style={{ fontSize: '0.78rem', color: '#dc2626' }}>
-          Click to verify link ↗
-        </a>
-      </div>
-    </div>
-  )}
-</div>
+              {form.posterURL && form.posterType === 'pdf' && (
+                <div style={{
+                  marginTop: 12, padding: '12px 16px', borderRadius: 10,
+                  background: 'rgba(220,38,38,0.06)',
+                  border: '1px solid rgba(220,38,38,0.15)',
+                  display: 'flex', alignItems: 'center', gap: 10
+                }}>
+                  <i className="fas fa-file-pdf" style={{ color: '#dc2626', fontSize: '1.2rem' }}></i>
+                  <div>
+                    <div style={{ fontWeight: 600, fontSize: '0.85rem', color: '#111827' }}>
+                      PDF Circular linked
+                    </div>
+                    <a href={form.posterURL} target="_blank" rel="noreferrer"
+                      style={{ fontSize: '0.78rem', color: '#dc2626' }}>
+                      Click to verify link ↗
+                    </a>
+                  </div>
+                </div>
+              )}
+            </div>
 
             {/* Title */}
             <div className="col-12">
@@ -358,25 +350,87 @@ const clearForm = () => {
               </div>
             </div>
 
-            {/* Registration Link */}
+            {/* Registration Type Selector */}
             <div className="col-12">
-              <label style={labelStyle}>
-                Registration Link *
-                <span style={{ color: '#9ca3af', fontWeight: 400, marginLeft: 8 }}>
-                  (Google Form or any external link)
-                </span>
-              </label>
-              <div style={{ position: 'relative' }}>
-                <i className="fas fa-link" style={{
-                  position: 'absolute', left: 14, top: '50%',
-                  transform: 'translateY(-50%)', color: '#9ca3af'
-                }}></i>
-                <input type="url" required placeholder="https://forms.google.com/..."
-                  value={form.registrationLink}
-                  onChange={e => setForm({ ...form, registrationLink: e.target.value })}
-                  style={{ ...inputStyle, paddingLeft: 40 }} onFocus={focus} onBlur={blur} />
+              <label style={labelStyle}>Registration Type *</label>
+              <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
+                {[
+                  {
+                    value: 'builtin',
+                    label: '📋 Built-in Registration',
+                    desc: 'Students register directly inside EventSphere — data saved to Firestore'
+                  },
+                  {
+                    value: 'external',
+                    label: '🔗 External Link',
+                    desc: 'Provide a Google Form or any external registration link'
+                  }
+                ].map(opt => (
+                  <div key={opt.value}
+                    onClick={() => setForm({ ...form, registrationType: opt.value, registrationLink: '' })}
+                    style={{
+                      flex: 1, minWidth: 200, padding: '16px 20px',
+                      borderRadius: 12, cursor: 'pointer', transition: 'all 0.2s',
+                      border: form.registrationType === opt.value
+                        ? '2px solid #f59e0b' : '2px solid #e5e7eb',
+                      background: form.registrationType === opt.value
+                        ? 'rgba(245,158,11,0.05)' : 'white'
+                    }}>
+                    <div style={{ fontWeight: 700, color: '#111827', marginBottom: 4, fontSize: '0.9rem' }}>
+                      {opt.label}
+                    </div>
+                    <div style={{ color: '#9ca3af', fontSize: '0.78rem' }}>{opt.desc}</div>
+                  </div>
+                ))}
               </div>
             </div>
+
+            {/* External link field */}
+            {form.registrationType === 'external' && (
+              <div className="col-12">
+                <label style={labelStyle}>
+                  Registration Link *
+                  <span style={{ color: '#9ca3af', fontWeight: 400, marginLeft: 8 }}>
+                    (Google Form or any external link)
+                  </span>
+                </label>
+                <div style={{ position: 'relative' }}>
+                  <i className="fas fa-link" style={{
+                    position: 'absolute', left: 14, top: '50%',
+                    transform: 'translateY(-50%)', color: '#9ca3af'
+                  }}></i>
+                  <input type="url"
+                    required={form.registrationType === 'external'}
+                    placeholder="https://forms.google.com/..."
+                    value={form.registrationLink}
+                    onChange={e => setForm({ ...form, registrationLink: e.target.value })}
+                    style={{ ...inputStyle, paddingLeft: 40 }}
+                    onFocus={focus} onBlur={blur} />
+                </div>
+              </div>
+            )}
+
+            {/* Built-in info box */}
+            {form.registrationType === 'builtin' && (
+              <div className="col-12">
+                <div style={{
+                  background: 'rgba(79,70,229,0.06)',
+                  border: '1.5px solid rgba(79,70,229,0.2)',
+                  borderRadius: 12, padding: '16px 20px',
+                  display: 'flex', alignItems: 'flex-start', gap: 14
+                }}>
+                  <i className="fas fa-info-circle" style={{ color: '#4f46e5', marginTop: 2, fontSize: '1.1rem' }}></i>
+                  <div>
+                    <div style={{ fontWeight: 700, color: '#4f46e5', marginBottom: 6, fontSize: '0.88rem' }}>
+                      Built-in Registration Active
+                    </div>
+                    <div style={{ color: '#6b7280', fontSize: '0.82rem', lineHeight: 1.6 }}>
+                      Students will register directly inside EventSphere. Their name, department, email and phone will be auto-filled from their profile. You can view all registrations and export as CSV from the Participants page.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
 
             {/* Max Seats */}
             <div className="col-md-6">
@@ -464,6 +518,7 @@ const clearForm = () => {
                 }}>Clear Form</button>
               </div>
             </div>
+
           </div>
         </form>
       </div>
