@@ -127,6 +127,26 @@ export default function EventDetails() {
       </div>
     </StudentLayout>
   )
+  {/* OD PDF Download — shown only if coordinator uploaded */}
+{event.odPdfURL && (
+  <a href={event.odPdfURL} target="_blank" rel="noreferrer"
+    style={{
+      display: 'flex', alignItems: 'center', justifyContent: 'center',
+      gap: 10, width: '100%', padding: '12px',
+      background: 'rgba(220,38,38,0.08)',
+      border: '1.5px solid rgba(220,38,38,0.25)',
+      borderRadius: 12, color: '#dc2626',
+      textDecoration: 'none', fontWeight: 700,
+      fontSize: '0.88rem', marginBottom: 12,
+      transition: 'all 0.2s'
+    }}
+    onMouseEnter={e => e.currentTarget.style.background = 'rgba(220,38,38,0.14)'}
+    onMouseLeave={e => e.currentTarget.style.background = 'rgba(220,38,38,0.08)'}
+  >
+    <i className="fas fa-file-pdf"></i>
+    Download OD PDF
+  </a>
+)}
 
   if (!event) return (
     <StudentLayout>
